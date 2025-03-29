@@ -2,14 +2,15 @@ name: Build and Deploy to Azure App Service
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main  # or any other branch you want to deploy from
 
 env:
   ACR_NAME: ${{ secrets.AZURE_ACR_NAME }}
   ACR_LOGIN_SERVER: ${{ secrets.AZURE_ACR_LOGIN_SERVER }}
-  IMAGE_NAME: myapp
-  WEBAPP_NAME: your-appservice-name
-  RESOURCE_GROUP: your-resource-group-name
+  IMAGE_NAME: myapp  # Your image name, e.g., `myapp`
+  WEBAPP_NAME: your-web-app-name  # Your App Service name
+  RESOURCE_GROUP: your-resource-group  # Your Azure Resource Group
 
 jobs:
   build-and-deploy:
@@ -18,27 +19,27 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Log in to ACR
+    - name: Log in to Azure Container Registry
       uses: docker/login-action@v2
       with:
         registry: ${{ env.ACR_LOGIN_SERVER }}
         username: ${{ secrets.AZURE_ACR_USERNAME }}
         password: ${{ secrets.AZURE_ACR_PASSWORD }}
 
-    - name: Build image
-      run: |
-        docker build -t $ACR_LOGIN_SERVER/$IMAGE_NAME:${{ github.sha }} .
+    - name: Build and Push Docker image
+      uses: docker/build-push-action@v3
+      with:
+        context: ./test-cicd  # Path to your app (root directory, where Dockerfile is located)
+        file: ./test-cicd/Dockerfile  # Path to the Dockerfile
+        push: true  # Push the image to the registry
+        tags: ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-    - name: Push image
-      run: |
-        docker push $ACR_LOGIN_SERVER/$IMAGE_NAME:${{ github.sha }}
-
-    - name: Azure Login
+    - name: Log in to Azure using Service Principal
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Deploy to App Service
+    - name: Deploy Docker image to Azure App Service
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.WEBAPP_NAME }}
