@@ -9,8 +9,7 @@ env:
   ACR_NAME: ${{ secrets.AZURE_ACR_NAME }}
   ACR_LOGIN_SERVER: ${{ secrets.AZURE_ACR_LOGIN_SERVER }}
   IMAGE_NAME: myapp  # Your image name, e.g., `myapp`
-  WEBAPP_NAME: your-web-app-name  # Your App Service name
-  RESOURCE_GROUP: your-resource-group  # Your Azure Resource Group
+  WEBAPP_NAME: xanhtestapp  # Your App Service name
 
 jobs:
   build-and-deploy:
